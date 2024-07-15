@@ -31,6 +31,17 @@
         android:textColor="#FFFFFF" />
 
     <Button
+        android:id="@+id/view_license_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:backgroundTint="#7E7558"
+        android:text="Visualizar Licença"
+        android:textColor="#FFFFFF" />
+
+    <Button
         android:id="@+id/send_license_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

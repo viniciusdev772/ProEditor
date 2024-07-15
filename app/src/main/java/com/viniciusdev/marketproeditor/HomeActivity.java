@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import android.content.pm.PackageManager;
@@ -13,6 +14,9 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.provider.Settings;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -36,10 +40,12 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Random;
+import java.util.UUID;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
@@ -63,6 +69,7 @@ public class HomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_home);
 
         TextView greetingText = findViewById(R.id.greeting_text);
+        Button viewLicenseButton = findViewById(R.id.view_license_button);
         Button deleteLicenseButton = findViewById(R.id.delete_license_button);
         Button sendLicenseButton = findViewById(R.id.send_license_button);
 
@@ -79,18 +86,67 @@ public class HomeActivity extends AppCompatActivity {
             greetingText.setText(greeting + " " + licenseInfo);
             deleteLicenseButton.setVisibility(View.VISIBLE);
             sendLicenseButton.setVisibility(View.VISIBLE);
+            viewLicenseButton.setVisibility(View.VISIBLE);
         } else {
             // Verificar e solicitar permissões
             checkPermissions();
             deleteLicenseButton.setVisibility(View.GONE);
             sendLicenseButton.setVisibility(View.GONE);
+            viewLicenseButton.setVisibility(View.GONE);
         }
 
         deleteLicenseButton.setOnClickListener(v -> showDeleteConfirmationDialog());
         sendLicenseButton.setOnClickListener(v -> sendLicenseViaWhatsApp());
+        viewLicenseButton.setOnClickListener(v -> showLicenseInfoDialog());
 
         handler = new Handler();
         random = new Random();
+    }
+
+    private void showLicenseInfoDialog() {
+        String licenseInfo = readLicenseFile2();
+
+        if (licenseInfo == null) {
+            Toast.makeText(this, "Erro ao ler o arquivo de licença", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        try {
+            JSONObject jsonObject = new JSONObject(licenseInfo);
+            String integrityStatus = jsonObject.optString("integrity_status", "unknown");
+            String username = jsonObject.optString("username", "N/A");
+            String phoneNumber = jsonObject.optString("phone_number", "N/A");
+            String deviceId = jsonObject.optString("device_id", "N/A");
+            String deviceModel = jsonObject.optString("device_model", "N/A");
+            String deviceProduct = jsonObject.optString("device_product", "N/A");
+            String androidVersion = jsonObject.optString("android_version", "N/A");
+            String jsonTimestamp = jsonObject.optString("timestamp", "N/A");
+            String fileTimestamp = jsonObject.optString("file_timestamp", "N/A");
+
+            String message = "Nome: " + username +
+                    "\nTelefone: " + phoneNumber +
+                    "\nID do Dispositivo: " + deviceId +
+                    "\nModelo do Dispositivo: " + deviceModel +
+                    "\nProduto do Dispositivo: " + deviceProduct +
+                    "\nVersão do Android: " + androidVersion +
+                    "\nTimestamp do JSON: " + jsonTimestamp +
+                    "\nTimestamp do Arquivo: " + fileTimestamp +
+                    "\nStatus de Integridade: ";
+
+            SpannableString spannableMessage = new SpannableString(message + integrityStatus);
+            int color = integrityStatus.equals("verified") ? ContextCompat.getColor(this, android.R.color.holo_green_dark) : ContextCompat.getColor(this, android.R.color.holo_red_dark);
+            spannableMessage.setSpan(new ForegroundColorSpan(color), message.length(), message.length() + integrityStatus.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle("Informações da Licença")
+                    .setMessage(spannableMessage)
+                    .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
+                    .show();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void initializePermissionLauncher() {
@@ -172,12 +228,86 @@ public class HomeActivity extends AppCompatActivity {
             // Descriptografar dados
             String decryptedData = decrypt(new String(data, StandardCharsets.UTF_8), SECRET_KEY);
             JSONObject jsonObject = new JSONObject(decryptedData);
-            return  jsonObject.getString("username");
+            return jsonObject.getString("username");
         } catch (Exception e) {
             e.printStackTrace();
             return "Erro ao ler o arquivo de licença";
         }
     }
+
+    private String readLicenseFile2() {
+        try {
+            File licenseFile = new File(Environment.getExternalStorageDirectory(), LICENSE_FILE_PATH);
+            FileInputStream fis = new FileInputStream(licenseFile);
+            byte[] data = new byte[(int) fis.getChannel().size()];
+            fis.read(data);
+            fis.close();
+
+            // Descriptografar dados
+            String decryptedData = decrypt(new String(data, StandardCharsets.UTF_8), SECRET_KEY);
+            JSONObject jsonObject = new JSONObject(decryptedData);
+
+            // Obter o hash armazenado e remover do JSON
+            String storedHash = jsonObject.getString("hash");
+            jsonObject.remove("hash");
+
+            // Obter o nome original do arquivo e o timestamp do JSON
+            String originalFileName = jsonObject.getString("original_file_name");
+            String jsonTimestamp = jsonObject.getString("timestamp");
+
+            // Recalcular o hash dos dados JSON (sem o hash)
+            String recalculatedHash = calculateHash(jsonObject.toString());
+
+            // Obter o timestamp do arquivo
+            String fileTimestamp = new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault()).format(new Date(licenseFile.lastModified()));
+
+            // Verificar a integridade do arquivo
+            boolean isIntegrityViolated = false;
+
+            if (!storedHash.equals(recalculatedHash)) {
+                isIntegrityViolated = true;
+                runOnUiThread(() -> {
+                    Toast.makeText(this, "Hash esperado: " + storedHash, Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "Hash atual: " + recalculatedHash, Toast.LENGTH_LONG).show();
+                });
+            }
+
+            if (!jsonTimestamp.equals(fileTimestamp)) {
+                isIntegrityViolated = true;
+                runOnUiThread(() -> {
+                    Toast.makeText(this, "Timestamp do JSON esperado: " + jsonTimestamp, Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "Timestamp do arquivo atual: " + fileTimestamp, Toast.LENGTH_LONG).show();
+                });
+            }
+
+            if (!originalFileName.equals(licenseFile.getName())) {
+                isIntegrityViolated = true;
+                runOnUiThread(() -> {
+                    Toast.makeText(this, "Nome do arquivo esperado: " + originalFileName, Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "Nome do arquivo atual: " + licenseFile.getName(), Toast.LENGTH_LONG).show();
+                });
+            }
+
+            // Definir status de integridade
+            jsonObject.put("integrity_status", isIntegrityViolated ? "violated" : "verified");
+
+            // Adicionar o timestamp do arquivo no JSON
+            jsonObject.put("file_timestamp", fileTimestamp);
+
+            return jsonObject.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            JSONObject errorJson = new JSONObject();
+            try {
+                errorJson.put("error", "Erro ao ler o arquivo de licença");
+            } catch (Exception jsonException) {
+                jsonException.printStackTrace();
+            }
+            return errorJson.toString();
+        }
+    }
+
+
 
     private void showUserInfoDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -275,10 +405,11 @@ public class HomeActivity extends AppCompatActivity {
     private void saveLicenseFile(String username, String phoneNumber) {
         try {
             // Verificar se os campos estão vazios
-            if( username.trim().equals("") || phoneNumber.trim().equals("")){
+            if (username.trim().isEmpty() || phoneNumber.trim().isEmpty()) {
                 runOnUiThread(() -> Toast.makeText(this, "Preencha todos os campos", Toast.LENGTH_SHORT).show());
                 return;
             }
+
             // Obter informações do dispositivo
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("username", username);
@@ -288,24 +419,34 @@ public class HomeActivity extends AppCompatActivity {
             jsonObject.put("device_product", Build.PRODUCT);
             jsonObject.put("android_version", Build.VERSION.RELEASE);
 
-            // Adicionar
-
-
+            // Adicionar timestamp
             String timeStamp = new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault()).format(new Date());
             jsonObject.put("timestamp", timeStamp);
 
-            String jsonString = jsonObject.toString();
-            // Criptografar dados
-            String encryptedData = encrypt(jsonString, SECRET_KEY);
+            // Adicionar nome original do arquivo
+            String originalFileName = LICENSE_FILE_PATH;
+            jsonObject.put("original_file_name", "license.json");
 
-            // Adicionar atraso simulado
-            Thread.sleep(30000);
+            // Adicionar um salt (UUID)
+            String salt = UUID.randomUUID().toString();
+            jsonObject.put("salt", salt);
+
+            // Calcular o hash dos dados JSON
+            String jsonString = jsonObject.toString();
+            String hash = calculateHash(jsonString);
+            jsonObject.put("hash", hash);
+
+            // Criptografar dados
+            String encryptedData = encrypt(jsonObject.toString(), SECRET_KEY);
 
             File file = new File(Environment.getExternalStorageDirectory(), LICENSE_FILE_PATH);
             file.getParentFile().mkdirs();
             FileOutputStream fos = new FileOutputStream(file);
             fos.write(encryptedData.getBytes(StandardCharsets.UTF_8));
             fos.close();
+            // Adicionar atraso simulado
+            Thread.sleep(3000);
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -315,6 +456,20 @@ public class HomeActivity extends AppCompatActivity {
         Intent intent = getIntent();
         finish();
         startActivity(intent);
+    }
+
+    private String calculateHash(String data) throws Exception {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] hash = digest.digest(data.getBytes(StandardCharsets.UTF_8));
+        StringBuilder hexString = new StringBuilder();
+        for (byte b : hash) {
+            String hex = Integer.toHexString(0xff & b);
+            if (hex.length() == 1) {
+                hexString.append('0');
+            }
+            hexString.append(hex);
+        }
+        return hexString.toString();
     }
 
     private String encrypt(String data, String secretKey) throws Exception {
@@ -336,7 +491,7 @@ public class HomeActivity extends AppCompatActivity {
     private void showDeleteConfirmationDialog() {
         new MaterialAlertDialogBuilder(this)
                 .setTitle("Situação Delicada")
-                .setMessage("Se você já enviou esssa licença ao desenvolvedor e ela já está ativa no ProEditor, e se vc apagar você irá perder o acesso, tendo que aguardar o desenvolvedor aprovar sua licença manualmente no servidor novamente. sendo assim, pense bem na espera que terá que vc irá gerar para uma nova licença")
+                .setMessage("Se você já enviou essa licença ao desenvolvedor e ela já está ativa no ProEditor, e se você apagar você irá perder o acesso, tendo que aguardar o desenvolvedor aprovar sua licença manualmente no servidor novamente. Sendo assim, pense bem na espera que terá que você irá gerar para uma nova licença.")
                 .setCancelable(false)
                 .setPositiveButton("Sim", (dialog, id) -> {
                     new MaterialAlertDialogBuilder(this)
@@ -368,6 +523,8 @@ public class HomeActivity extends AppCompatActivity {
             }
         } else {
             Toast.makeText(this, "Arquivo de licença não encontrado", Toast.LENGTH_SHORT).show();
+
+
         }
     }
 

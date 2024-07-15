@@ -1,4 +1,4 @@
-name: Build Debug APK
+name: Build and Release Debug APK
 
 on:
   push:
@@ -42,8 +42,23 @@ jobs:
       - name: Build Debug APK
         run: ./gradlew assembleDebug
 
-      - name: Upload Debug APK
-        uses: actions/upload-artifact@v2
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          tag_name: debug-${{ github.sha }}
+          release_name: Debug Release ${{ github.sha }}
+          draft: false
+          prerelease: true
+
+      - name: Upload Debug APK to Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: app/build/outputs/apk/debug/app-debug.apk
+          asset_name: app-debug.apk
+          asset_content_type: application/vnd.android.package-archive

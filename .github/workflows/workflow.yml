@@ -1,9 +1,9 @@
-name: Build and Release Debug APK
+name: Build and Release APK
 
 on:
   push:
     branches:
-      - marketpro # Monitorar a branch masteerkj
+      - marketpro # Monitorar a branch marketpro
 
 jobs:
   build:
@@ -39,8 +39,19 @@ jobs:
       - name: Conceder permissão de execução para Gradlew
         run: chmod +x ./gradlew
 
-      - name: Compilar APK de Debug
-        run: ./gradlew assembleDebug
+      - name: Configurar variáveis de ambiente para assinatura
+        run: |
+          echo "ANDROID_KEYSTORE_BASE64=${{ secrets.ANDROID_KEYSTORE_BASE64 }}" >> $GITHUB_ENV
+          echo "ANDROID_KEYSTORE_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
+          echo "ANDROID_KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }}" >> $GITHUB_ENV
+          echo "ANDROID_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}" >> $GITHUB_ENV
+
+      - name: Decodificar e armazenar o arquivo JKS
+        run: |
+          echo $ANDROID_KEYSTORE_BASE64 | base64 --decode > keystore.jks
+
+      - name: Compilar APK de Release
+        run: ./gradlew assembleRelease -Pandroid.injected.signing.store.file=keystore.jks -Pandroid.injected.signing.store.password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} -Pandroid.injected.signing.key.alias=${{ secrets.ANDROID_KEY_ALIAS }} -Pandroid.injected.signing.key.password=${{ secrets.ANDROID_KEY_PASSWORD }}
 
       - name: Criar Release
         id: create_release
@@ -48,17 +59,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: debug-${{ github.sha }}
-          release_name: Release de Debug ${{ github.sha }}
+          tag_name: release-${{ github.sha }}
+          release_name: Release ${{ github.sha }}
           draft: false
-          prerelease: true
+          prerelease: false
 
-      - name: Fazer upload do APK de Debug para a Release
+      - name: Fazer upload do APK de Release para a Release
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: app/build/outputs/apk/debug/app-debug.apk
-          asset_name: app-debug.apk
+          asset_path: app/build/outputs/apk/release/app-release.apk
+          asset_name: app-release.apk
           asset_content_type: application/vnd.android.package-archive

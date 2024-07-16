@@ -18,6 +18,10 @@ android {
 
     buildTypes {
         release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
@@ -32,9 +36,8 @@ android {
 }
 
 dependencies {
-
     implementation libs.appcompat
-    implementation (libs.cardview)
+    implementation libs.cardview
     implementation libs.material
     implementation libs.constraintlayout
     implementation libs.navigation.fragment

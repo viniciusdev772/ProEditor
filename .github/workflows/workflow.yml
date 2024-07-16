@@ -56,7 +56,7 @@ jobs:
         run: ls -la ~/.android/keystore.jks
 
       - name: Compilar APK de Release
-        run: ./gradlew assembleRelease -Pandroid.injected.signing.store.file=~/.android/keystore.jks -Pandroid.injected.signing.store.password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} -Pandroid.injected.signing.key.alias=${{ secrets.ANDROID_KEY_ALIAS }} -Pandroid.injected.signing.key.password=${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew assembleRelease -Pandroid.injected.signing.store.file=$HOME/.android/keystore.jks -Pandroid.injected.signing.store.password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} -Pandroid.injected.signing.key.alias=${{ secrets.ANDROID_KEY_ALIAS }} -Pandroid.injected.signing.key.password=${{ secrets.ANDROID_KEY_PASSWORD }}
 
       - name: Criar Release
         id: create_release

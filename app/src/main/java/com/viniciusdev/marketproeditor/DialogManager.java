@@ -1,5 +1,6 @@
 package com.viniciusdev.marketproeditor;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.text.Spannable;
@@ -22,8 +23,8 @@ import java.util.Random;
 
 public class DialogManager {
 
-    private Context context;
-    private LicenseManager licenseManager;
+    private final Context context;
+    private final LicenseManager licenseManager;
     private ProgressBar progressBar;
     private TextView progressText;
     private AlertDialog progressDialog;
@@ -109,6 +110,7 @@ public class DialogManager {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     public void showProgressDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         LayoutInflater inflater = LayoutInflater.from(context);
@@ -176,24 +178,20 @@ public class DialogManager {
                 .setTitle("Situação Delicada")
                 .setMessage("Se você já enviou essa licença ao desenvolvedor e ela já está ativa no ProEditor, e se você apagar você irá perder o acesso, tendo que aguardar o desenvolvedor aprovar sua licença manualmente no servidor novamente. Sendo assim, pense bem na espera que terá que você irá gerar para uma nova licença.")
                 .setCancelable(false)
-                .setPositiveButton("Sim", (dialog, id) -> {
-                    new MaterialAlertDialogBuilder(context)
-                            .setMessage("Você realmente quer apagar a licença?")
-                            .setCancelable(false)
-                            .setPositiveButton("Sim", (dialog1, id1) -> {
-                                new MaterialAlertDialogBuilder(context)
-                                        .setMessage("Essa é sua última chance. Apagar a licença?")
-                                        .setCancelable(false)
-                                        .setPositiveButton("Sim", (dialog2, id2) -> {
-                                            licenseManager.deleteLicenseFile();
-                                            ((HomeActivity) context).restartActivity();
-                                        })
-                                        .setNegativeButton("Não", (dialog2, id2) -> dialog2.dismiss())
-                                        .show();
-                            })
-                            .setNegativeButton("Não", (dialog1, id1) -> dialog1.dismiss())
-                            .show();
-                })
+                .setPositiveButton("Sim", (dialog, id) -> new MaterialAlertDialogBuilder(context)
+                        .setMessage("Você realmente quer apagar a licença?")
+                        .setCancelable(false)
+                        .setPositiveButton("Sim", (dialog1, id1) -> new MaterialAlertDialogBuilder(context)
+                                .setMessage("Essa é sua última chance. Apagar a licença?")
+                                .setCancelable(false)
+                                .setPositiveButton("Sim", (dialog2, id2) -> {
+                                    licenseManager.deleteLicenseFile();
+                                    ((HomeActivity) context).restartActivity();
+                                })
+                                .setNegativeButton("Não", (dialog2, id2) -> dialog2.dismiss())
+                                .show())
+                        .setNegativeButton("Não", (dialog1, id1) -> dialog1.dismiss())
+                        .show())
                 .setNegativeButton("Não", (dialog, id) -> dialog.dismiss())
                 .show();
     }

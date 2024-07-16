@@ -1,5 +1,6 @@
 package com.viniciusdev.marketproeditor;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
@@ -12,7 +13,6 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 
@@ -21,27 +21,25 @@ import java.util.Random;
 
 public class HomeActivity extends AppCompatActivity {
 
-    private LicenseManager licenseManager;
     private PermissionManager permissionManager;
     private DialogManager dialogManager;
-    private ActivityResultLauncher<String[]> requestPermissionsLauncher;
-    private Random random;
 
+    @SuppressLint("SetTextI18n")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        licenseManager = new LicenseManager(this);
+        LicenseManager licenseManager = new LicenseManager(this);
         dialogManager = new DialogManager(this, licenseManager);
 
-        requestPermissionsLauncher = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
+        ActivityResultLauncher<String[]> requestPermissionsLauncher = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
             Boolean manageExternalStorageGranted = null;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 manageExternalStorageGranted = Environment.isExternalStorageManager();
             }
 
-            if (manageExternalStorageGranted) {
+            if (Boolean.TRUE.equals(manageExternalStorageGranted)) {
                 dialogManager.showUserInfoDialog();
             } else {
                 Toast.makeText(this, "Permissões de armazenamento negadas", Toast.LENGTH_SHORT).show();
@@ -85,7 +83,7 @@ public class HomeActivity extends AppCompatActivity {
         sendLicenseButton.setOnClickListener(v -> sendLicenseViaWhatsApp());
         viewLicenseButton.setOnClickListener(v -> dialogManager.showLicenseInfoDialog());
 
-        random = new Random();
+        Random random = new Random();
     }
 
     private String getGreeting() {
@@ -99,6 +97,7 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
+    @SuppressLint("QueryPermissionsNeeded")
     private void sendLicenseViaWhatsApp() {
         try {
             File licenseFile = new File(Environment.getExternalStorageDirectory(), LicenseManager.LICENSE_FILE_PATH);
@@ -136,6 +135,6 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        permissionManager.onActivityResult(requestCode, resultCode, data);
+        permissionManager.onActivityResult(requestCode);
     }
 }

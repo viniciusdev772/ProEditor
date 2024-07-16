@@ -29,11 +29,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         initializePermissionLauncher();
 
+        checkPermissions();
+
         if (licenseFileExists()) {
-            // Se o arquivo de licença existir, vá diretamente para HomeActivity
             navigateToHome();
         } else {
-            // Verificar e solicitar permissões
             checkPermissions();
         }
     }
@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
                 manageExternalStorageGranted = Environment.isExternalStorageManager();
             }
 
-            if (manageExternalStorageGranted) {
+            if (Boolean.TRUE.equals(manageExternalStorageGranted)) {
                 // Se as permissões foram concedidas, mostre a tela inicial
                 showMainActivityLayout();
             } else {
@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 showMainActivityLayout();
             }
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        } else {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissionsLauncher.launch(new String[]{
                         Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -73,8 +73,6 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 showMainActivityLayout();
             }
-        } else {
-            showMainActivityLayout();
         }
     }
 

@@ -1,8 +1,10 @@
 package com.viniciusdev.marketproeditor;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Build;
 import android.os.Environment;
+
 import android.util.Base64;
 import android.widget.Toast;
 
@@ -17,6 +19,7 @@ import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.UUID;
 
 import javax.crypto.Cipher;
@@ -26,7 +29,7 @@ public class LicenseManager {
 
     public static final String LICENSE_FILE_PATH = "ProEditor/license.json";
     private static final String SECRET_KEY = "16CharSecretKey!";
-    private Context context;
+    private final Context context;
     public boolean lic_valid = false;
 
     public LicenseManager(Context context) {
@@ -49,7 +52,7 @@ public class LicenseManager {
             fis.read(data);
             fis.close();
 
-            String decryptedData = decrypt(new String(data, StandardCharsets.UTF_8), SECRET_KEY);
+            String decryptedData = decrypt(new String(data, StandardCharsets.UTF_8));
             JSONObject jsonObject = new JSONObject(decryptedData);
             return jsonObject.getString("username");
         } catch (Exception e) {
@@ -66,7 +69,7 @@ public class LicenseManager {
             fis.read(data);
             fis.close();
 
-            String decryptedData = decrypt(new String(data, StandardCharsets.UTF_8), SECRET_KEY);
+            String decryptedData = decrypt(new String(data, StandardCharsets.UTF_8));
             JSONObject jsonObject = new JSONObject(decryptedData);
 
             String storedHash = jsonObject.getString("hash");
@@ -86,30 +89,22 @@ public class LicenseManager {
             if (!storedHash.equals(recalculatedHash)) {
                 isIntegrityViolated = true;
                 lic_valid = false;
-                showToast("Hash esperado: " + storedHash);
-                showToast("Hash atual: " + recalculatedHash);
             }
 
             if (!jsonTimestamp.equals(fileTimestamp)) {
                 isIntegrityViolated = true;
                 lic_valid = false;
-                showToast("Timestamp do JSON esperado: " + jsonTimestamp);
-                showToast("Timestamp do arquivo atual: " + fileTimestamp);
             }
 
             if (!originalFileName.equals(licenseFile.getName())) {
                 isIntegrityViolated = true;
                 lic_valid = false;
-                showToast("Nome do arquivo esperado: " + originalFileName);
-                showToast("Nome do arquivo atual: " + licenseFile.getName());
             }
 
             long fileTimestampCompleto = licenseFile.lastModified();
             if (Math.abs(jsonTimestampCompleto - fileTimestampCompleto) > 50) {
                 isIntegrityViolated = true;
                 lic_valid = false;
-                showToast("Timestamp completo do JSON: " + jsonTimestampCompleto);
-                showToast("Timestamp completo do arquivo: " + fileTimestampCompleto);
             }
 
             jsonObject.put("integrity_status", isIntegrityViolated ? "violated" : "verified");
@@ -136,7 +131,7 @@ public class LicenseManager {
             }
 
             File file = new File(Environment.getExternalStorageDirectory(), LICENSE_FILE_PATH);
-            file.getParentFile().mkdirs();
+            Objects.requireNonNull(file.getParentFile()).mkdirs();
             FileOutputStream fos = new FileOutputStream(file);
 
             JSONObject jsonObject = new JSONObject();
@@ -162,7 +157,7 @@ public class LicenseManager {
             String hash = calculateHash(jsonString);
             jsonObject.put("hash", hash);
 
-            String encryptedData = encrypt(jsonObject.toString(), SECRET_KEY);
+            String encryptedData = encrypt(jsonObject.toString());
             fos.write(encryptedData.getBytes(StandardCharsets.UTF_8));
             fos.close();
 
@@ -187,17 +182,17 @@ public class LicenseManager {
         return hexString.toString();
     }
 
-    private String encrypt(String data, String secretKey) throws Exception {
-        Key key = new SecretKeySpec(secretKey.getBytes(StandardCharsets.UTF_8), "AES");
-        Cipher cipher = Cipher.getInstance("AES");
+    private String encrypt(String data) throws Exception {
+        Key key = new SecretKeySpec(LicenseManager.SECRET_KEY.getBytes(StandardCharsets.UTF_8), "AES");
+        @SuppressLint("GetInstance") Cipher cipher = Cipher.getInstance("AES");
         cipher.init(Cipher.ENCRYPT_MODE, key);
         byte[] encryptedData = cipher.doFinal(data.getBytes(StandardCharsets.UTF_8));
         return Base64.encodeToString(encryptedData, Base64.DEFAULT);
     }
 
-    private String decrypt(String data, String secretKey) throws Exception {
-        Key key = new SecretKeySpec(secretKey.getBytes(StandardCharsets.UTF_8), "AES");
-        Cipher cipher = Cipher.getInstance("AES");
+    private String decrypt(String data) throws Exception {
+        Key key = new SecretKeySpec(LicenseManager.SECRET_KEY.getBytes(StandardCharsets.UTF_8), "AES");
+        @SuppressLint("GetInstance") Cipher cipher = Cipher.getInstance("AES");
         cipher.init(Cipher.DECRYPT_MODE, key);
         byte[] decryptedData = cipher.doFinal(Base64.decode(data, Base64.DEFAULT));
         return new String(decryptedData, StandardCharsets.UTF_8);

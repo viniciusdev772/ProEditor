@@ -12,14 +12,13 @@ import android.provider.Settings;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.core.content.ContextCompat;
 
 public class PermissionManager {
 
     private static final int REQUEST_PERMISSION = 1001;
-    private Context context;
-    private ActivityResultLauncher<String[]> requestPermissionsLauncher;
+    private final Context context;
+    private final ActivityResultLauncher<String[]> requestPermissionsLauncher;
 
     public PermissionManager(Context context, ActivityResultLauncher<String[]> requestPermissionsLauncher) {
         this.context = context;
@@ -34,7 +33,7 @@ public class PermissionManager {
                 intent.setData(uri);
                 ((Activity) context).startActivityForResult(intent, REQUEST_PERMISSION);
             }
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        } else {
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissionsLauncher.launch(new String[]{
                         Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -44,7 +43,7 @@ public class PermissionManager {
         }
     }
 
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    public void onActivityResult(int requestCode) {
         if (requestCode == REQUEST_PERMISSION) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 if (Environment.isExternalStorageManager()) {

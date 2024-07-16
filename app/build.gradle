@@ -10,7 +10,6 @@ android {
         applicationId "com.viniciusdev.marketproeditor"
         minSdk 24
         targetSdk 34
-        buildConfigField "String", "SECRET_KEY", "\"16CharSecretKey!\""
         versionCode 1
         versionName "1.0"
 

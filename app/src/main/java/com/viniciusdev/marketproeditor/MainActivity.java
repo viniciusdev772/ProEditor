@@ -30,12 +30,6 @@ public class MainActivity extends AppCompatActivity {
         initializePermissionLauncher();
 
         checkPermissions();
-
-        if (licenseFileExists()) {
-            navigateToHome();
-        } else {
-            checkPermissions();
-        }
     }
 
     private void initializePermissionLauncher() {
@@ -47,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
 
             if (Boolean.TRUE.equals(manageExternalStorageGranted)) {
                 // Se as permissões foram concedidas, mostre a tela inicial
-                showMainActivityLayout();
+                checkLicenseAndNavigate();
             } else {
                 Toast.makeText(this, "Permissões de armazenamento negadas", Toast.LENGTH_SHORT).show();
             }
@@ -62,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
                 intent.setData(uri);
                 startActivityForResult(intent, REQUEST_PERMISSION);
             } else {
-                showMainActivityLayout();
+                checkLicenseAndNavigate();
             }
         } else {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
@@ -71,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
                         Manifest.permission.WRITE_EXTERNAL_STORAGE
                 });
             } else {
-                showMainActivityLayout();
+                checkLicenseAndNavigate();
             }
         }
     }
@@ -82,11 +76,19 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == REQUEST_PERMISSION) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 if (Environment.isExternalStorageManager()) {
-                    showMainActivityLayout();
+                    checkLicenseAndNavigate();
                 } else {
                     Toast.makeText(this, "Permissão de gerenciamento de todos os arquivos negada", Toast.LENGTH_SHORT).show();
                 }
             }
+        }
+    }
+
+    private void checkLicenseAndNavigate() {
+        if (licenseFileExists()) {
+            navigateToHome();
+        } else {
+            showMainActivityLayout();
         }
     }
 

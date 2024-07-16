@@ -48,14 +48,15 @@ jobs:
 
       - name: Decodificar e armazenar o arquivo JKS
         run: |
-          echo $ANDROID_KEYSTORE_BASE64 | base64 --decode > app/keystore.jks
+          mkdir -p ~/.android
+          echo $ANDROID_KEYSTORE_BASE64 | base64 --decode > ~/.android/keystore.jks
         shell: bash
 
       - name: Verificar se o arquivo JKS foi criado
-        run: ls -la app/keystore.jks
+        run: ls -la ~/.android/keystore.jks
 
       - name: Compilar APK de Release
-        run: ./gradlew assembleRelease -Pandroid.injected.signing.store.file=app/keystore.jks -Pandroid.injected.signing.store.password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} -Pandroid.injected.signing.key.alias=${{ secrets.ANDROID_KEY_ALIAS }} -Pandroid.injected.signing.key.password=${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew assembleRelease -Pandroid.injected.signing.store.file=~/.android/keystore.jks -Pandroid.injected.signing.store.password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} -Pandroid.injected.signing.key.alias=${{ secrets.ANDROID_KEY_ALIAS }} -Pandroid.injected.signing.key.password=${{ secrets.ANDROID_KEY_PASSWORD }}
 
       - name: Criar Release
         id: create_release

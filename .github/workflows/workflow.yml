@@ -3,7 +3,7 @@ name: Build and Release Debug APK
 on:
   push:
     branches:
-      - marketpro # Monitorar a branch masterkj
+      - marketpro # Monitorar a branch masteerkj
 
 jobs:
   build:

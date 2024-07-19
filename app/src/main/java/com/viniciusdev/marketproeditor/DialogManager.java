@@ -3,6 +3,8 @@ package com.viniciusdev.marketproeditor;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.os.Build;
+import android.provider.Settings;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
@@ -19,6 +21,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import org.json.JSONObject;
 
+import java.util.Objects;
 import java.util.Random;
 
 public class DialogManager {
@@ -64,6 +67,7 @@ public class DialogManager {
         dialog.show();
     }
 
+    @SuppressLint("HardwareIds")
     public void showLicenseInfoDialog() {
         String licenseInfo = licenseManager.readLicenseFile2();
 
@@ -83,13 +87,27 @@ public class DialogManager {
             String androidVersion = jsonObject.optString("android_version", "N/A");
             String jsonTimestamp = jsonObject.optString("timestamp", "N/A");
             String fileTimestamp = jsonObject.optString("file_timestamp", "N/A");
+            String androidId = jsonObject.optString("android_id", "N/A");
+
+            // Obter informações do dispositivo
+            String actualDeviceModel = Build.MODEL;
+            String actualDeviceProduct = Build.PRODUCT;
+            String actualAndroidVersion = Build.VERSION.RELEASE;
+            String actualAndroidId = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+
+            // Comparar informações
+            boolean isDeviceModelMatch = Objects.equals(deviceModel, actualDeviceModel);
+            boolean isDeviceProductMatch = Objects.equals(deviceProduct, actualDeviceProduct);
+            boolean isAndroidVersionMatch = Objects.equals(androidVersion, actualAndroidVersion);
+            boolean isAndroidIdMatch = Objects.equals(androidId, actualAndroidId);
 
             String message = "Nome: " + username +
                     "\nTelefone: " + phoneNumber +
                     "\nID do Dispositivo: " + deviceId +
-                    "\nModelo do Dispositivo: " + deviceModel +
-                    "\nProduto do Dispositivo: " + deviceProduct +
-                    "\nVersão do Android: " + androidVersion +
+                    "\nModelo do Dispositivo: " + deviceModel + (isDeviceModelMatch ? " (correspondente)" : " (não correspondente)") +
+                    "\nProduto do Dispositivo: " + deviceProduct + (isDeviceProductMatch ? " (correspondente)" : " (não correspondente)") +
+                    "\nVersão do Android: " + androidVersion + (isAndroidVersionMatch ? " (correspondente)" : " (não correspondente)") +
+                    "\nID Unico do Dispositivo: " + androidId + (isAndroidIdMatch ? " (correspondente)" : " (não correspondente)") +
                     "\nTimestamp do JSON: " + jsonTimestamp +
                     "\nTimestamp do Arquivo: " + fileTimestamp +
                     "\nStatus de Integridade: ";

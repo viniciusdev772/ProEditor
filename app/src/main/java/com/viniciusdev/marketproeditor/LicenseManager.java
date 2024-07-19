@@ -4,7 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Build;
 import android.os.Environment;
-
+import android.provider.Settings;
 import android.util.Base64;
 import android.widget.Toast;
 
@@ -141,6 +141,10 @@ public class LicenseManager {
             jsonObject.put("device_model", Build.MODEL);
             jsonObject.put("device_product", Build.PRODUCT);
             jsonObject.put("android_version", Build.VERSION.RELEASE);
+
+            // Obtém o ID único do dispositivo
+            @SuppressLint("HardwareIds") String androidId = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+            jsonObject.put("android_id", androidId);
 
             String timeStamp = new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault()).format(new Date());
             jsonObject.put("timestamp", timeStamp);

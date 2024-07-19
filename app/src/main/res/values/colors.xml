@@ -8,4 +8,27 @@
     <color name="background_color">#212121</color>
     <color name="text_color_primary">#FFFFFF</color>
     <color name="text_color_secondary">#BDBDBD</color>
+
+    <!-- Adicionando cores adicionais -->
+    <color name="secondary_color">#4CAF50</color>
+    <color name="secondary_dark_color">#388E3C</color>
+    <color name="secondary_light_color">#C8E6C9</color>
+    <color name="error_color">#F44336</color>
+    <color name="error_dark_color">#D32F2F</color>
+    <color name="error_light_color">#E57373</color>
+    <color name="warning_color">#FF9800</color>
+    <color name="warning_dark_color">#F57C00</color>
+    <color name="warning_light_color">#FFB74D</color>
+    <color name="info_color">#2196F3</color>
+    <color name="info_dark_color">#1976D2</color>
+    <color name="info_light_color">#BBDEFB</color>
+    <color name="success_color">#4CAF50</color>
+    <color name="success_dark_color">#388E3C</color>
+    <color name="success_light_color">#C8E6C9</color>
+
+    <!-- Cores de estado -->
+    <color name="ripple_color">#1F000000</color>
+    <color name="divider_color">#BDBDBD</color>
+    <color name="surface_color">#121212</color>
+
 </resources>

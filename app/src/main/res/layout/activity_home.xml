@@ -1,36 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121212"
     android:gravity="center"
     android:orientation="vertical"
     android:padding="16dp"
     tools:context=".HomeActivity">
 
-    <TextView
+    <com.google.android.material.textview.MaterialTextView
         android:id="@+id/greeting_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:text="Bem-vindo ao Aplicativo Injetor"
-        android:textColor="#FFFFFF"
+        android:textColor="?android:attr/textColorPrimary"
         android:textSize="24sp" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/delete_license_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
-        android:backgroundTint="#FF5722"
+        android:backgroundTint="@color/primary_color"
         android:text="Apagar Licença"
-        android:textColor="#FFFFFF" />
+        android:textColor="@color/white"
+        app:cornerRadius="8dp" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/view_license_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -39,9 +40,10 @@
         android:layout_marginEnd="16dp"
         android:backgroundTint="#7E7558"
         android:text="Visualizar Licença"
-        android:textColor="#FFFFFF" />
+        android:textColor="@color/white"
+        app:cornerRadius="8dp" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/send_license_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -50,16 +52,17 @@
         android:layout_marginEnd="16dp"
         android:backgroundTint="#25D366"
         android:text="Enviar Licença via WhatsApp"
-        android:textColor="#FFFFFF" />
+        android:textColor="@color/white"
+        app:cornerRadius="8dp" />
 
-    <TextView
+    <com.google.android.material.textview.MaterialTextView
         android:id="@+id/license_info_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:gravity="center"
         android:text="Essa licença é necessária para o funcionamento perfeito do app injetor para Sketchware."
-        android:textColor="#FFFFFF"
+        android:textColor="?android:attr/textColorSecondary"
         android:textSize="16sp" />
 
 </LinearLayout>

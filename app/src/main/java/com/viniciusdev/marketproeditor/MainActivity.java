@@ -20,36 +20,49 @@ import java.io.File;
 
 public class MainActivity extends AppCompatActivity {
     private static final String LICENSE_FILE_PATH = "ProEditor/license.json";
-    private static final int REQUEST_PERMISSION = 1001;
 
     private ActivityResultLauncher<String[]> requestPermissionsLauncher;
+    private ActivityResultLauncher<Intent> manageAllFilesPermissionLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        initializePermissionLauncher();
-
+        initializePermissionLaunchers();
         checkPermissions();
-
-        if (licenseFileExists()) {
-            navigateToHome();
-        } else {
-            checkPermissions();
-        }
     }
 
-    private void initializePermissionLauncher() {
+    private void initializePermissionLaunchers() {
         requestPermissionsLauncher = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
-            Boolean manageExternalStorageGranted = null;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                manageExternalStorageGranted = Environment.isExternalStorageManager();
+            boolean allPermissionsGranted = true;
+            for (Boolean granted : result.values()) {
+                if (!granted) {
+                    allPermissionsGranted = false;
+                    break;
+                }
             }
 
-            if (Boolean.TRUE.equals(manageExternalStorageGranted)) {
-                // Se as permissões foram concedidas, mostre a tela inicial
-                showMainActivityLayout();
+            if (allPermissionsGranted) {
+                if (licenseFileExists()) {
+                    navigateToHome();
+                } else {
+                    showMainActivityLayout();
+                }
             } else {
                 Toast.makeText(this, "Permissões de armazenamento negadas", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        manageAllFilesPermissionLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                if (Environment.isExternalStorageManager()) {
+                    if (licenseFileExists()) {
+                        navigateToHome();
+                    } else {
+                        showMainActivityLayout();
+                    }
+                } else {
+                    Toast.makeText(this, "Permissão de gerenciamento de todos os arquivos negada", Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }
@@ -60,9 +73,13 @@ public class MainActivity extends AppCompatActivity {
                 Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
                 Uri uri = Uri.fromParts("package", getPackageName(), null);
                 intent.setData(uri);
-                startActivityForResult(intent, REQUEST_PERMISSION);
+                manageAllFilesPermissionLauncher.launch(intent);
             } else {
-                showMainActivityLayout();
+                if (licenseFileExists()) {
+                    navigateToHome();
+                } else {
+                    showMainActivityLayout();
+                }
             }
         } else {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
@@ -71,20 +88,10 @@ public class MainActivity extends AppCompatActivity {
                         Manifest.permission.WRITE_EXTERNAL_STORAGE
                 });
             } else {
-                showMainActivityLayout();
-            }
-        }
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_PERMISSION) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                if (Environment.isExternalStorageManager()) {
-                    showMainActivityLayout();
+                if (licenseFileExists()) {
+                    navigateToHome();
                 } else {
-                    Toast.makeText(this, "Permissão de gerenciamento de todos os arquivos negada", Toast.LENGTH_SHORT).show();
+                    showMainActivityLayout();
                 }
             }
         }

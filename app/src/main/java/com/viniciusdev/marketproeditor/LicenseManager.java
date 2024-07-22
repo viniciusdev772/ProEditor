@@ -88,22 +88,26 @@ public class LicenseManager {
 
             if (!storedHash.equals(recalculatedHash)) {
                 isIntegrityViolated = true;
+                Toast.makeText(context, "Hash inválido", Toast.LENGTH_SHORT).show();
                 lic_valid = false;
             }
 
             if (!jsonTimestamp.equals(fileTimestamp)) {
                 isIntegrityViolated = true;
+                Toast.makeText(context, "Timestamp inválido", Toast.LENGTH_SHORT).show();
                 lic_valid = false;
             }
 
             if (!originalFileName.equals(licenseFile.getName())) {
                 isIntegrityViolated = true;
+                Toast.makeText(context, "Nome do arquivo inválido", Toast.LENGTH_SHORT).show();
                 lic_valid = false;
             }
 
             long fileTimestampCompleto = licenseFile.lastModified();
             if (Math.abs(jsonTimestampCompleto - fileTimestampCompleto) > 50) {
                 isIntegrityViolated = true;
+                Toast.makeText(context, "Timestamp de arquivo inválido", Toast.LENGTH_SHORT).show();
                 lic_valid = false;
             }
 

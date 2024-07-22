@@ -39,7 +39,7 @@ import java.util.Random;
 
 public class DialogManager {
 
-    public static final String LICENSE_FILE_PATH = ".ProEditor/ProAccount/licence.json";
+    public static final String LICENSE_FILE_PATH = ".ProEditor/ProAccount/license.json";
     private final Context context;
     private final LicenseManager licenseManager;
     private ProgressBar progressBar;

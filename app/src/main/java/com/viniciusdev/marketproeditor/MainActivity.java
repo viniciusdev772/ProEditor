@@ -19,7 +19,7 @@ import androidx.core.content.ContextCompat;
 import java.io.File;
 
 public class MainActivity extends AppCompatActivity {
-    private static final String LICENSE_FILE_PATH = ".ProEditor/ProAccount/licence.json";
+    private static final String LICENSE_FILE_PATH = ".ProEditor/ProAccount/license.json";
 
     private ActivityResultLauncher<String[]> requestPermissionsLauncher;
     private ActivityResultLauncher<Intent> manageAllFilesPermissionLauncher;

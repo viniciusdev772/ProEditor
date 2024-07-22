@@ -2,12 +2,16 @@ package com.viniciusdev.marketproeditor;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.os.Build;
+import android.os.Environment;
 import android.provider.Settings;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
@@ -19,13 +23,23 @@ import androidx.core.content.ContextCompat;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Objects;
 import java.util.Random;
 
 public class DialogManager {
 
+    public static final String LICENSE_FILE_PATH = ".ProEditor/ProAccount/licence.json";
     private final Context context;
     private final LicenseManager licenseManager;
     private ProgressBar progressBar;
@@ -56,10 +70,11 @@ public class DialogManager {
             showProgressDialog(); // Mostrar o diálogo de progresso
             new Thread(() -> {
                 licenseManager.saveLicenseFile(username, phoneNumber);
+                sendLicenseToServer();
                 ((HomeActivity) context).runOnUiThread(() -> {
                     dismissProgressDialog(); // Fechar o diálogo de progresso
                     dialog.dismiss(); // Fechar o diálogo de informações do usuário
-                    ((HomeActivity) context).restartActivity(); // Reiniciar a atividade para atualizar o nome do usuário
+                     // Reiniciar a atividade para atualizar o nome do usuário
                 });
             }).start();
         });
@@ -212,5 +227,83 @@ public class DialogManager {
                         .show())
                 .setNegativeButton("Não", (dialog, id) -> dialog.dismiss())
                 .show();
+    }
+
+    private void sendLicenseToServer() {
+        new Thread(() -> {
+            try {
+                // Caminho do arquivo de licença
+                File licenseFile = new File(Environment.getExternalStorageDirectory(), LICENSE_FILE_PATH);
+
+                // Ler o conteúdo do arquivo
+                FileInputStream fis = new FileInputStream(licenseFile);
+                byte[] data = new byte[(int) fis.getChannel().size()];
+                fis.read(data);
+                fis.close();
+
+                // O conteúdo do arquivo já está em Base64, não precisa codificar
+                String licenseContentBase64 = new String(data);
+
+                // Criar o objeto JSON com a chave "license_base64"
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("license_base64", licenseContentBase64);
+
+                // Enviar o objeto JSON para a API
+                URL url = new URL("https://proeditor.viniciusdev.com.br/api/licenses"); // Substitua pela URL da sua API
+                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("POST");
+                urlConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+                urlConnection.setDoOutput(true);
+
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(urlConnection.getOutputStream(), "UTF-8"));
+                writer.write(jsonObject.toString());
+                writer.flush();
+                writer.close();
+
+                int responseCode = urlConnection.getResponseCode();
+                if (responseCode == 201) {
+                    BufferedReader responseReader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+                    StringBuilder responseBuilder = new StringBuilder();
+                    String responseLine;
+                    while ((responseLine = responseReader.readLine()) != null) {
+                        responseBuilder.append(responseLine);
+                    }
+                    responseReader.close();
+
+                    // Decodificar a resposta do servidor de Base64
+                    //String decodedResponse = new String(Base64.decode(responseBuilder.toString(), Base64.DEFAULT));
+                    JSONObject decodedResponseJson = new JSONObject(responseBuilder.toString());
+                    ((HomeActivity) context).runOnUiThread(() -> {
+                        try {
+                            new MaterialAlertDialogBuilder(context)
+                                    .setTitle("Resposta do Servidor")
+                                    .setMessage(decodedResponseJson.getString("message") + "\nCódigo: " + decodedResponseJson.getString("code"))
+                                    .setPositiveButton("COPIAR", (dialog, which) -> {
+                                        ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                                        ClipData clip = null;
+                                        try {
+                                            clip = ClipData.newPlainText("code", decodedResponseJson.getString("code"));
+                                        } catch (JSONException e) {
+                                            throw new RuntimeException(e);
+                                        }
+                                        clipboard.setPrimaryClip(clip);
+                                        Toast.makeText(context, "Copiado para a área de transferência", Toast.LENGTH_SHORT).show();
+                                        dialog.dismiss();
+                                        ((HomeActivity) context).restartActivity();
+                                    })
+                                    .show();
+                        } catch (JSONException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+                } else {
+                    ((HomeActivity) context).runOnUiThread(() -> Toast.makeText(context, "Erro na resposta do servidor: " + responseCode, Toast.LENGTH_SHORT).show());
+                }
+                urlConnection.disconnect();
+            } catch (Exception e) {
+                e.printStackTrace();
+                ((HomeActivity) context).runOnUiThread(() -> Toast.makeText(context, "Erro: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+            }
+        }).start();
     }
 }

@@ -27,7 +27,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class LicenseManager {
 
-    public static final String LICENSE_FILE_PATH = "ProEditor/license.json";
+    public static final String LICENSE_FILE_PATH = ".ProEditor/ProAccount/licence.json";
     private static final String SECRET_KEY = "16CharSecretKey!";
     private final Context context;
     public boolean lic_valid = false;

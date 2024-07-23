@@ -31,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
         checkPermissions();
     }
 
+    //kk
     private void initializePermissionLaunchers() {
         requestPermissionsLauncher = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
             boolean allPermissionsGranted = true;

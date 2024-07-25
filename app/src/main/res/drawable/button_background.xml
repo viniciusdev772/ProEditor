@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Estado pressionado -->
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <!-- Fundo sólido quando pressionado -->
+            <solid android:color="@color/button_pressed_background"/>
+            <!-- Contorno branco -->
+            <stroke
+                android:width="2dp"
+                android:color="@color/button_border"/>
+            <!-- Cor do contorno quando pressionado -->
+            <stroke
+                android:width="2dp"
+                android:color="@color/button_pressed_border"/>
+            <!-- Bordas arredondadas -->
+            <corners android:radius="8dp"/>
+            <!-- Padding interno -->
+            <padding
+                android:left="8dp"
+                android:right="8dp"
+                android:top="8dp"
+                android:bottom="8dp"/>
+        </shape>
+    </item>
+
+    <!-- Estado normal -->
+    <item>
+        <shape android:shape="rectangle">
+            <!-- Gradiente de fundo -->
+            <gradient
+                android:angle="270"
+                android:startColor="@color/button_normal_start"
+                android:endColor="@color/button_normal_end"/>
+            <!-- Contorno branco -->
+            <stroke
+                android:width="2dp"
+                android:color="@color/button_border"/>
+            <!-- Bordas arredondadas -->
+            <corners android:radius="8dp"/>
+            <!-- Padding interno -->
+            <padding
+                android:left="8dp"
+                android:right="8dp"
+                android:top="8dp"
+                android:bottom="8dp"/>
+        </shape>
+    </item>
+</selector>

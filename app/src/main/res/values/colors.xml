@@ -1,5 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <!-- Cores normais -->
+    <color name="button_normal_start">#FF5722</color> <!-- Cor inicial do gradiente (Laranja) -->
+    <color name="button_normal_end">#FFC107</color> <!-- Cor final do gradiente (Amarelo) -->
+    <color name="button_border">#FFFFFF</color> <!-- Cor do contorno (Branco) -->
+
+    <!-- Cores quando pressionado -->
+    <color name="button_pressed_background">#E64A19</color> <!-- Cor de fundo quando pressionado (Laranja escuro) -->
+    <color name="button_pressed_border">#FFFFFF</color> <!-- Cor do contorno quando pressionado (Branco) -->
 </resources>

@@ -65,23 +65,21 @@ jobs:
 
       - name: Criar Release
         id: create_release
-        run: |
-          response=$(curl -s -X POST https://api.github.com/repos/${{ github.repository }}/releases \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            -d "{\"tag_name\": \"release-${{ github.sha }}\", \"name\": \"${{ env.COMMIT_MESSAGE }} - ${{ github.ref_name }}\", \"draft\": false, \"prerelease\": false}")
-          echo "RELEASE_ID=$(echo $response | jq -r '.id')" >> $GITHUB_ENV
+        uses: actions/create-release@v1
+        with:
+          tag_name: release-${{ github.sha }}
+          release_name: "${{ env.COMMIT_MESSAGE }} - ${{ github.ref_name }}"
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Fazer upload do APK de Release para a Release
-        run: |
-          curl -s -X POST ${{ env.RELEASE_UPLOAD_URL }} \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Content-Type: application/vnd.android.package-archive" \
-            -H "Accept: application/vnd.github.v3+json" \
-            --data-binary @app/build/outputs/apk/release/app-release.apk \
-            -o response.json
-          echo "Upload concluído com sucesso."
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: app/build/outputs/apk/release/app-release.apk
+          asset_name: app-release-${{ github.ref_name }}.apk
+          asset_content_type: application/vnd.android.package-archive
         env:
-          RELEASE_UPLOAD_URL: ${{ steps.create_release.outputs.upload_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

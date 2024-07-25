@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - marketpro # Monitorar a branch marketpro
+      - proeditor # Monitorar a branch proeditor
 
 jobs:
   build:

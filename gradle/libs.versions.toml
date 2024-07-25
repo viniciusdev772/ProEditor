@@ -1,5 +1,5 @@
 [versions]
-agp = "8.6.0-beta01"
+agp = "8.7.0-alpha02"
 blurview = "1.6.6"
 blurviewVersion = "version-2.0.3"
 cardview = "1.0.0"

@@ -25,7 +25,6 @@
             android:layout_marginBottom="32dp"
             android:gravity="center"
             android:text="ProEditor Remastered Version"
-            android:textColor="@android:color/black"
             android:textSize="24sp"
             android:textStyle="bold" />
         <com.google.android.material.button.MaterialButton
@@ -50,6 +49,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             android:text="CONFIGURAR"
+            android:radius="8dp"
             android:background="@drawable/button_background" />
 
         <com.google.android.material.button.MaterialButton

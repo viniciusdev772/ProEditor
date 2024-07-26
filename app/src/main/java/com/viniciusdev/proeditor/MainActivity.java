@@ -153,6 +153,7 @@ public class MainActivity extends AppCompatActivity {
             long timestampCompleto = licenseFile.lastModified();
             //jsonObject88.put("timestamp", Math.abs(jsonObject88.getLong("timestamp_completo") - timestampCompleto) > 50);
             jsonObject88.put("IsIntegrited", true); // Atualiza com o valor real
+jsonObject88.put("timestamp_completo",licenseFile.lastModified());
 
             enviarDados(jsonObject88);
 

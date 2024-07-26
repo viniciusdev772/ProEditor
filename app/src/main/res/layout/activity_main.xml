@@ -70,6 +70,6 @@
         android:layout_marginTop="16dp"
         android:text="By Vinícius Dev 2024"
         android:textAlignment="center"
-        android:textColor="@android:color/black" />
+         />
 
 </LinearLayout>

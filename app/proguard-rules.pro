@@ -19,3 +19,19 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+# OkHttp
+-keepattributes Signature
+-keepattributes *Annotation*
+
+# OkHttp 3.x
+-dontwarn okhttp3.**
+-keep class okhttp3.** { *; }
+-keep interface okhttp3.** { *; }
+-keep enum okhttp3.** { *; }
+
+# Retain generic type information for use by reflection
+-keepattributes Signature
+
+# Okio
+-dontwarn okio.**
+-keep class okio.** { *; }

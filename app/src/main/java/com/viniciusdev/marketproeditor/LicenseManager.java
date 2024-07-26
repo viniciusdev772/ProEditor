@@ -147,7 +147,7 @@ public class LicenseManager {
             jsonObject.put("android_version", Build.VERSION.RELEASE);
 
             // Obtém o ID único do dispositivo
-            @SuppressLint("HardwareIds") String androidId = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
+            @SuppressLint("HardwareIds") String androidId = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
             jsonObject.put("android_id", androidId);
 
             String timeStamp = new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault()).format(new Date());

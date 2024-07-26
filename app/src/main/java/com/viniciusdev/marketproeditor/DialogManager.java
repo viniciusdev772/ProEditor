@@ -108,7 +108,7 @@ public class DialogManager {
             String actualDeviceModel = Build.MODEL;
             String actualDeviceProduct = Build.PRODUCT;
             String actualAndroidVersion = Build.VERSION.RELEASE;
-            String actualAndroidId = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+            String actualAndroidId = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
 
             // Comparar informações
             boolean isDeviceModelMatch = Objects.equals(deviceModel, actualDeviceModel);

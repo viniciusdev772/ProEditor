@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/glass_background"
+    android:padding="16dp"
+    android:elevation="8dp"> <!-- Sombra para o efeito de profundidade -->
+
+    <TextView
+        android:id="@+id/option_edit_colors"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:text="Edição de Cores"
+        android:textColor="?android:attr/textColorPrimary"
+        android:background="?attr/selectableItemBackground"
+        android:gravity="center"
+        android:textAppearance="?attr/textAppearanceListItem" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@android:color/darker_gray" /> <!-- Cor do divisor mais sutil -->
+
+    <TextView
+        android:id="@+id/option_full_edit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:text="Edição Completa"
+        android:textColor="?android:attr/textColorPrimary"
+        android:background="?attr/selectableItemBackground"
+        android:gravity="center"
+        android:textAppearance="?attr/textAppearanceListItem" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@android:color/darker_gray" />
+
+    <TextView
+        android:id="@+id/option_common_edit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:text="Edição Comum"
+        android:textColor="?android:attr/textColorPrimary"
+        android:background="?attr/selectableItemBackground"
+        android:gravity="center"
+        android:textAppearance="?attr/textAppearanceListItem" />
+
+</LinearLayout>

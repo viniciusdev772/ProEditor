@@ -1,24 +1,30 @@
 package com.viniciusdev.proeditor;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import androidx.activity.EdgeToEdge;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.SearchView;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import android.view.WindowManager;
 import org.json.JSONObject;
-
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -42,8 +48,11 @@ public class ListarActivity extends AppCompatActivity {
 
     private TextView totalProjects;
     private int compiledCount = 0;
+    private boolean isShowingCompiled = false;
+    private boolean isShowingNotCompiled = false;
     private int notCompiledCount = 0;
     private ItemAdapter adapter;
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,28 +69,60 @@ public class ListarActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         totalProjects = findViewById(R.id.totalProjects);
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
 
         RecyclerView recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         // Listar diretórios
-        FileUtil.listDir(sketchware_mysc_list_path, myprojects_string);
+        listDirectories();
 
         // Verificar projetos
         verifyProjects();
 
         adapter = new ItemAdapter(myprojects_listVerifyed, item -> {
-            // Handle item click
-            Toast.makeText(ListarActivity.this, "Clicou no item: " + item.getName(), Toast.LENGTH_SHORT).show();
+            showProjectOptionsDialog(item);
         }, this);
         recyclerView.setAdapter(adapter);
 
         updateProjectCounts();
+
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            // Atualizar a lista de projetos
+            listDirectories();
+            verifyProjects();
+            adapter.updateList(myprojects_listVerifyed);
+            updateProjectCounts();
+            if (isShowingCompiled) {
+                filterProjects(true);
+            } else if (isShowingNotCompiled) {
+                filterProjects(false);
+            }
+            swipeRefreshLayout.setRefreshing(false);
+        });
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+        getMenuInflater().inflate(R.menu.menu_search, menu);
+
+        MenuItem searchItem = menu.findItem(R.id.action_search);
+        SearchView searchView = (SearchView) searchItem.getActionView();
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                filterProjectsByQuery(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                filterProjectsByQuery(newText);
+                return true;
+            }
+        });
+
         return true;
     }
 
@@ -90,19 +131,26 @@ public class ListarActivity extends AppCompatActivity {
         int itemId = item.getItemId();
         if (itemId == R.id.filter_all) {
             adapter.updateList(myprojects_listVerifyed);
+            isShowingCompiled = false;
+            isShowingNotCompiled = false;
         } else if (itemId == R.id.filter_compiled) {
             filterProjects(true);
+            isShowingCompiled = true;
+            isShowingNotCompiled = false;
         } else if (itemId == R.id.filter_not_compiled) {
             filterProjects(false);
-            float initialColor = -1.6740915E7f; // Exemplo de cor inicial no formato float
-            ColorPickerDialog colorPickerDialog = new ColorPickerDialog(this, initialColor);
-            colorPickerDialog.show();
+            isShowingNotCompiled = true;
+            isShowingCompiled = false;
         } else {
             return super.onOptionsItemSelected(item);
         }
         return true;
     }
 
+    private void listDirectories() {
+        myprojects_string.clear();
+        FileUtil.listDir(sketchware_mysc_list_path, myprojects_string);
+    }
 
     private void verifyProjects() {
         myprojects_list.clear();
@@ -192,10 +240,63 @@ public class ListarActivity extends AppCompatActivity {
         adapter.updateList(filteredList);
     }
 
+    private void filterProjectsByQuery(String query) {
+        List<Item> filteredList = new ArrayList<>();
+        for (Item item : myprojects_listVerifyed) {
+            if (item.getName().toLowerCase().contains(query.toLowerCase()) ||
+                    item.getId().toLowerCase().contains(query.toLowerCase()) ||
+                    item.getProjectPackage().toLowerCase().contains(query.toLowerCase())) {
+                filteredList.add(item);
+            }
+        }
+        adapter.updateList(filteredList);
+    }
+
     private void updateProjectCounts() {
         @SuppressLint("DefaultLocale") String projectCountText = String.format("Total de Projetos: %d (Compilados: %d, Não Compilados: %d)",
                 myprojects_listVerifyed.size(), compiledCount, notCompiledCount);
         totalProjects.setText(projectCountText);
+    }
+
+    private void showProjectOptionsDialog(Item item) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.TransparentDialog);
+        LayoutInflater inflater = getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_project_options, null);
+
+        builder.setView(dialogView);
+
+        TextView optionEditColors = dialogView.findViewById(R.id.option_edit_colors);
+        TextView optionFullEdit = dialogView.findViewById(R.id.option_full_edit);
+        TextView optionCommonEdit = dialogView.findViewById(R.id.option_common_edit);
+
+        optionEditColors.setOnClickListener(v -> {
+            Toast.makeText(ListarActivity.this, "Edição de Cores selecionada para: " + item.getName(), Toast.LENGTH_SHORT).show();
+        });
+
+        optionFullEdit.setOnClickListener(v -> {
+            if (item.getBuildInfo().startsWith("Compilado")) {
+                Intent intent = new Intent(ListarActivity.this, ProjetoActivity.class);
+                intent.putExtra("projectName", item.getId());
+                startActivity(intent);
+                Toast.makeText(ListarActivity.this, "Edição Completa selecionada para: " + item.getName(), Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(ListarActivity.this, "O projeto não está compilado: " + item.getName(), Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        optionCommonEdit.setOnClickListener(v -> {
+            Toast.makeText(ListarActivity.this, "Edição Comum selecionada para: " + item.getName(), Toast.LENGTH_SHORT).show();
+        });
+
+        AlertDialog dialog = builder.create();
+
+        if(dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            //dialog.getWindow().setDimAmount(0.1f);  // Opacidade do fundo fora do diálogo
+            dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);  // Efeito de desfoque no fundo
+        }
+
+        dialog.show();
     }
 
     public String getSketchwareMyscListPath() {

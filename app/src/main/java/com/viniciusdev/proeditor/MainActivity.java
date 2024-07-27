@@ -1,6 +1,7 @@
 package com.viniciusdev.proeditor;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -77,6 +78,8 @@ public class MainActivity extends AppCompatActivity {
 
         // Configurar o botão para mostrar informações da licença
         findViewById(R.id.button_licenca).setOnClickListener(v -> verificarLicencaNoServidor());
+        findViewById(R.id.button_listar_projetos).setOnClickListener(v ->
+                startActivity(new Intent(MainActivity.this, ListarActivity.class)));
     }
 
     public JSONObject lerLicenca() throws Exception {

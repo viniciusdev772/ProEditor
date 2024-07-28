@@ -422,7 +422,7 @@ public class EditorActivity extends AppCompatActivity implements NavigationView.
 
     private void updateToolbarTitle(String filePath) {
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle(filePath != null ? new File(filePath).getName() : "Editor de Código");
+            getSupportActionBar().setTitle(getString(R.string.app_name));
         }
     }
 

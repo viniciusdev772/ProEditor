@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="center_horizontal|center_vertical">
+
+    <TextView
+        android:id="@+id/text_injetando"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="INJETANDO..."
+        android:textSize="18sp"
+        android:layout_marginBottom="20dp"
+        android:gravity="center" />
+
+    <Button
+        android:id="@+id/button_cancelar_injecao"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="CANCELAR INJEÇÃO"
+        android:textSize="18sp"
+        android:gravity="center" />
+
+    <!-- Outros elementos podem ser adicionados aqui -->
+
+</LinearLayout>

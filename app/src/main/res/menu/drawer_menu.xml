@@ -1,0 +1,20 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_recent_files"
+        android:title="Arquivos Recentes" />
+    <item
+        android:id="@+id/nav_increase_font_size"
+        android:title="Aumentar Tamanho da Fonte" />
+    <item
+        android:id="@+id/nav_decrease_font_size"
+        android:title="Diminuir Tamanho da Fonte" />
+    <item
+        android:id="@+id/nav_lock_toolbar"
+        android:title="Bloquear Toolbar" />
+    <item
+        android:id="@+id/nav_clear_recent_files"
+        android:title="Limpar Arquivos Recentes" />
+    <item
+        android:id="@+id/nav_format_file"
+        android:title="Formatar Arquivo" />
+</menu>

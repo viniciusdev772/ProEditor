@@ -15,6 +15,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
+        app:title="Projeto"
         app:titleTextColor="@android:color/white"
         app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
 
@@ -23,6 +24,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="RUN"
+            android:textColor="@android:color/white"
+            android:background="?attr/selectableItemBackground"
+            android:layout_gravity="end" />
+
+        <Button
+            android:id="@+id/btn_multi_select"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Multi-Select"
             android:textColor="@android:color/white"
             android:background="?attr/selectableItemBackground"
             android:layout_gravity="end" />
@@ -56,5 +66,16 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         android:background="?android:attr/windowBackground" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_delete"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="Delete"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_margin="16dp"
+        android:visibility="gone"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

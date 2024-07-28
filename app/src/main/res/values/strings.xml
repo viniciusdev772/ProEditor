@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">ProEditor</string>
+    <string name="navigation_drawer_open">Abrir Navegação</string>
+    <string name="navigation_drawer_close">Fechar Navegação</string>
 </resources>

@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId "com.viniciusdev.proeditor"
-        minSdk 24
+        minSdk 26
         targetSdk 34
         versionCode 1
         versionName "1.0"
@@ -38,8 +38,20 @@ dependencies {
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
+
+    implementation(platform("io.github.Rosemoe.sora-editor:bom:0.23.2"))
+    implementation("io.github.Rosemoe.sora-editor:editor")
+    implementation("io.github.Rosemoe.sora-editor:editor-lsp")
+    //implementation("io.github.Rosemoe.sora-editor:language-textmate")
+    implementation("io.github.Rosemoe.sora-editor:language-java")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation ("com.github.bumptech.glide:glide:4.16.0")
+    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
+    // Required to use `ListenableFuture` from Guava Android for one-shot generation
+    implementation("com.google.guava:guava:31.0.1-android")
+
+    // Required to use `Publisher` from Reactive Streams for streaming operations
+    implementation("org.reactivestreams:reactive-streams:1.0.4")
 }
 
 java {

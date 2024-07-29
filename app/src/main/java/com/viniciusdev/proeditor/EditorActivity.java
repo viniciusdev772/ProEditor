@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -23,10 +24,11 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.tabs.TabLayout;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.viniciusdev.proeditor.utils.DiffUtil;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -34,13 +36,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import io.github.rosemoe.sora.langs.java.JavaLanguage;
 import io.github.rosemoe.sora.widget.CodeEditor;
 
 public class EditorActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
+    private static final String TAG = "EditorActivity";
     private CodeEditor codeEditor;
     private Map<String, String> openFiles;
     private Map<String, Boolean> fileChanged;
@@ -48,6 +50,7 @@ public class EditorActivity extends AppCompatActivity implements NavigationView.
     private String currentFilePath;
     private static final String PREFS_NAME = "RecentFiles";
     private static final String EDITED_FILES_DIR = Environment.getExternalStorageDirectory().getPath() + "/ProEditor/edited/";
+    private static final String INJECTED_PREFS_NAME = "InjectedFiles";
     private DrawerLayout drawerLayout;
     private float textSize = 14;
     private TabLayout tabLayout;
@@ -96,6 +99,9 @@ public class EditorActivity extends AppCompatActivity implements NavigationView.
         // Carregar arquivos recentes
         loadRecentFiles();
 
+        // Carregar arquivos injetados
+        loadInjectedFiles();
+
         // Abrir o arquivo passado pela Intent
         String filePath = getIntent().getStringExtra("filePath");
         if (filePath != null) {
@@ -126,6 +132,7 @@ public class EditorActivity extends AppCompatActivity implements NavigationView.
     protected void onDestroy() {
         super.onDestroy();
         saveRecentFiles();
+        saveInjectedFiles();
         handler.removeCallbacks(changeChecker); // Parar a verificação quando a atividade for destruída
     }
 
@@ -186,15 +193,43 @@ public class EditorActivity extends AppCompatActivity implements NavigationView.
     private void saveCodeToFile() {
         if (currentFilePath != null) {
             try (FileWriter writer = new FileWriter(new File(currentFilePath))) {
-                writer.write(codeEditor.getText().toString());
-                openFiles.put(currentFilePath, codeEditor.getText().toString()); // Atualiza o conteúdo salvo no mapa
+                String newText = codeEditor.getText().toString();
+                String originalText = openFiles.get(currentFilePath);
+                String diff = DiffUtil.getDiff(originalText, newText);
+
+                writer.write(newText);
+                openFiles.put(currentFilePath, newText); // Atualiza o conteúdo salvo no mapa
                 fileChanged.put(currentFilePath, false);
                 updateTabTitle(currentFilePath, false);
                 Toast.makeText(this, "Arquivo salvo", Toast.LENGTH_SHORT).show();
+                logSharedPreferences(PREFS_NAME);
+
+                // Salva o diff no arquivo
+                saveDiffToFile(currentFilePath, diff);
+
+                // Salva o arquivo editado e registra no SharedPreferences
+                saveEditedFile(currentFilePath, newText);
+                saveInjectedFileIfNeeded(currentFilePath);
             } catch (IOException e) {
                 e.printStackTrace();
                 Toast.makeText(this, "Erro ao salvar arquivo", Toast.LENGTH_SHORT).show();
             }
+        }
+    }
+
+    // Novo método para salvar o diff em um arquivo separado
+    private void saveDiffToFile(String filePath, String diff) {
+        File diffFileDir = new File(EDITED_FILES_DIR);
+        if (!diffFileDir.exists()) {
+            diffFileDir.mkdirs();
+        }
+
+        File diffFile = new File(diffFileDir, new File(filePath).getName() + ".diff");
+        try (FileWriter writer = new FileWriter(diffFile)) {
+            writer.write(diff);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Erro ao salvar diff", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -210,6 +245,17 @@ public class EditorActivity extends AppCompatActivity implements NavigationView.
         } catch (IOException e) {
             e.printStackTrace();
             Toast.makeText(this, "Erro ao salvar arquivo editado", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void saveInjectedFileIfNeeded(String originalFilePath) {
+        SharedPreferences prefs = getSharedPreferences(INJECTED_PREFS_NAME, Context.MODE_PRIVATE);
+        if (!prefs.contains(originalFilePath)) {
+            String editedFilePath = EDITED_FILES_DIR + new File(originalFilePath).getName();
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putString(originalFilePath, editedFilePath);
+            editor.apply();
+            logSharedPreferences(INJECTED_PREFS_NAME);
         }
     }
 
@@ -265,6 +311,13 @@ public class EditorActivity extends AppCompatActivity implements NavigationView.
             editor.putString(entry.getKey(), entry.getValue());
         }
         editor.apply();
+        logSharedPreferences(PREFS_NAME);
+    }
+
+    private void saveInjectedFiles() {
+        for (Map.Entry<String, String> entry : editedFiles.entrySet()) {
+            saveInjectedFileIfNeeded(entry.getKey());
+        }
     }
 
     private void loadRecentFiles() {
@@ -283,6 +336,21 @@ public class EditorActivity extends AppCompatActivity implements NavigationView.
         }
     }
 
+    private void loadInjectedFiles() {
+        SharedPreferences prefs = getSharedPreferences(INJECTED_PREFS_NAME, Context.MODE_PRIVATE);
+        Map<String, ?> allEntries = prefs.getAll();
+        for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
+            String originalFilePath = entry.getKey();
+            String editedFilePath = (String) entry.getValue();
+            try {
+                String code = new String(Files.readAllBytes(new File(editedFilePath).toPath()));
+                editedFiles.put(originalFilePath, code);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     private void checkForChanges() {
         if (currentFilePath != null && editedFiles.containsKey(currentFilePath)) {
             String currentText = codeEditor.getText().toString();
@@ -291,6 +359,7 @@ public class EditorActivity extends AppCompatActivity implements NavigationView.
                 fileChanged.put(currentFilePath, true);
                 updateTabTitle(currentFilePath, true);
                 saveEditedFile(currentFilePath, currentText);
+                saveInjectedFileIfNeeded(currentFilePath);
             }
         }
     }
@@ -324,6 +393,7 @@ public class EditorActivity extends AppCompatActivity implements NavigationView.
         editedFiles.remove(filePath);
         tabLayout.removeTab(tab);
         saveRecentFiles();
+        removeInjectedFile(filePath);
         if (filePath.equals(currentFilePath) && !openFiles.isEmpty()) {
             switchToFile(openFiles.keySet().iterator().next());
         } else if (filePath.equals(currentFilePath)) {
@@ -333,6 +403,14 @@ public class EditorActivity extends AppCompatActivity implements NavigationView.
         }
         Toast.makeText(this, "Arquivo removido dos recentes", Toast.LENGTH_SHORT).show();
         updateRecentFilesCount(); // Atualizar o número de arquivos recentes no menu
+    }
+
+    private void removeInjectedFile(String filePath) {
+        SharedPreferences prefs = getSharedPreferences(INJECTED_PREFS_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.remove(filePath);
+        editor.apply();
+        logSharedPreferences(INJECTED_PREFS_NAME);
     }
 
     @Override
@@ -418,6 +496,12 @@ public class EditorActivity extends AppCompatActivity implements NavigationView.
         tabLayout.removeAllTabs();
         Toast.makeText(this, "Arquivos recentes limpos", Toast.LENGTH_SHORT).show();
         updateRecentFilesCount(); // Atualizar o número de arquivos recentes no menu
+        logSharedPreferences(PREFS_NAME);
+    }
+
+    public static void deleteRecentFiles(Context context){
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        prefs.edit().clear().apply();
     }
 
     private void updateToolbarTitle(String filePath) {
@@ -437,17 +521,31 @@ public class EditorActivity extends AppCompatActivity implements NavigationView.
 
     private void checkModifiedFilesBeforeExit() {
         boolean hasModifiedFiles = false;
-        for (Boolean changed : fileChanged.values()) {
-            if (changed) {
+        StringBuilder modifiedFilesList = new StringBuilder();
+        StringBuilder modifiedFilesDiffs = new StringBuilder();
+
+        for (
+
+                Map.Entry<String, Boolean> entry : fileChanged.entrySet()) {
+            if (entry.getValue()) {
                 hasModifiedFiles = true;
-                break;
+                String filePath = entry.getKey();
+                modifiedFilesList.append(new File(filePath).getName()).append("\n");
+
+                String originalText = openFiles.get(filePath);
+                String newText = editedFiles.get(filePath);
+                String diff = DiffUtil.getDiff(originalText, newText);
+                modifiedFilesDiffs.append("Arquivo: ").append(new File(filePath).getName()).append("\n").append(diff).append("\n");
+
+                // Salva o diff no arquivo
+                saveDiffToFile(filePath, diff);
             }
         }
 
         if (hasModifiedFiles) {
             new MaterialAlertDialogBuilder(this)
                     .setTitle("Salvar alterações")
-                    .setMessage("Existem arquivos modificados. Deseja salvar todas as alterações?")
+                    .setMessage("Os seguintes arquivos foram modificados:\n\n" + modifiedFilesList + "\nDeseja salvar todas as alterações?\n\nAlterações:\n" + modifiedFilesDiffs)
                     .setPositiveButton("Salvar todos", (dialog, which) -> {
                         saveAllModifiedFiles();
                         finish();
@@ -475,14 +573,14 @@ public class EditorActivity extends AppCompatActivity implements NavigationView.
             }
         }
 
-        // Deletar a pasta edited após salvar todas as modificações
-        File editedDir = new File(EDITED_FILES_DIR);
-        if (editedDir.exists()) {
-            for (File file : Objects.requireNonNull(editedDir.listFiles())) {
-                file.delete();
-            }
-            editedDir.delete();
-        }
         Toast.makeText(this, "Todas as modificações foram salvas.", Toast.LENGTH_SHORT).show();
+    }
+
+    private void logSharedPreferences(String prefsName) {
+        SharedPreferences prefs = getSharedPreferences(prefsName, Context.MODE_PRIVATE);
+        Map<String, ?> allEntries = prefs.getAll();
+        for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
+            Log.d(TAG, prefsName + " - " + entry.getKey() + ": " + entry.getValue().toString());
+        }
     }
 }

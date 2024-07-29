@@ -2,17 +2,17 @@ package com.viniciusdev.proeditor;
 
 import android.os.Build;
 import android.os.Environment;
-import android.util.Base64;
 
-import javax.crypto.Cipher;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
 public class FileUtil {
 
@@ -48,6 +48,20 @@ public class FileUtil {
         }
 
         return path;
+    }
+
+
+
+    static void excluirRecursivamente(File arquivoOuPasta) {
+        if (arquivoOuPasta.isDirectory()) {
+            File[] conteudo = arquivoOuPasta.listFiles();
+            if (conteudo != null) {
+                for (File file : conteudo) {
+                    excluirRecursivamente(file);
+                }
+            }
+        }
+        arquivoOuPasta.delete();
     }
 
     public static String decryptProjectFile(String path) {

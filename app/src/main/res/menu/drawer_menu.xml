@@ -16,5 +16,5 @@
         android:title="Limpar Arquivos Recentes" />
     <item
         android:id="@+id/nav_format_file"
-        android:title="Formatar Arquivo" />
+        android:title="Visualizar XML" />
 </menu>

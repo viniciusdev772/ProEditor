@@ -5,6 +5,10 @@ plugins {
 android {
     namespace 'com.viniciusdev.proeditor'
     compileSdk 34
+    packagingOptions {
+        exclude 'META-INF/AL2.0'
+        exclude 'META-INF/LGPL2.1'
+    }
 
     defaultConfig {
         applicationId "com.viniciusdev.proeditor"
@@ -18,7 +22,7 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -52,8 +56,11 @@ dependencies {
     implementation ("io.github.java-diff-utils:java-diff-utils:4.12")
 
 
+
     // Required to use `Publisher` from Reactive Streams for streaming operations
     implementation("org.reactivestreams:reactive-streams:1.0.4")
+    implementation("androidx.core:core-ktx:1.13.1")
+    
 }
 
 java {

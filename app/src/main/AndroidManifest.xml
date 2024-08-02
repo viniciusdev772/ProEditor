@@ -29,6 +29,9 @@
         android:theme="@style/Theme.ProEditor"
         tools:targetApi="31">
         <activity
+            android:name=".XmlViewerActivity"
+            android:exported="false" />
+        <activity
             android:name=".EditorActivity"
             android:exported="false" />
         <activity

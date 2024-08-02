@@ -1,6 +1,7 @@
 package com.viniciusdev.proeditor;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
@@ -436,7 +437,17 @@ public class EditorActivity extends AppCompatActivity implements NavigationView.
             clearRecentFiles();
             return true;
         }
+        if(itemId == R.id.nav_format_file){
+            openXmlViewer(currentFilePath);
+            return true;
+        }
         return false;
+    }
+
+    private void openXmlViewer(String currentFilePath) {
+        Intent intent = new Intent(this, XmlViewerActivity.class);
+        intent.putExtra("XML_PATH", currentFilePath);
+        startActivity(intent);
     }
 
     private void updateRecentFilesCount() {
